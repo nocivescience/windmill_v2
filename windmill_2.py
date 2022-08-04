@@ -1,3 +1,4 @@
+from ctypes import windll
 from manim import *
 import itertools as it
 class WindmillData(Scene):
@@ -9,7 +10,7 @@ class WindmillData(Scene):
         'windmill_length':2*config['frame_width'],
         'windmill_rotation_speed':0.25,
         'style_windmill':{
-            'style_stroke':RED,
+            'stroke_color':RED,
             'stroke_width':2,
         }
     }
@@ -30,24 +31,34 @@ class WindmillData(Scene):
     def get_windmill(self,points,pivot=None,angle=TAU/6):
         line=Line(LEFT,RIGHT)
         line.set_angle(angle)
-        line.set_length(self.CONFIG['windmill_length'])
-        line.set_style(**self.CONFIG['windmill_style'])
+        line.set_length(self.CONFIG0['windmill_length'])
+        line.set_style(**self.CONFIG0['style_windmill'])
         line.pivot_set=points
         if pivot is not None:
             line.pivot=pivot
         else:
             line.pivot=points[0]
+        line.rot_speed=self.CONFIG0['windmill_rotation_speed']
+        line.add_updater(lambda t: t.move_to(t.pivot))
+        return line
 class WindmillScene(WindmillData):
     CONFIG={
         'final_run_time':60,
-        'windmill_rotation_speed':0.5
+        'windmill_rotation_speed':0.5,
+        'n_points':40,
     }
     def construct(self):
         self.add_points()
+        self.add_windmill()
     def add_points(self):
-        points=self.get_random_points_set(40)
+        points=self.get_random_points_set(self.CONFIG['n_points'])
         dots=self.get_dots(points=points)
         self.play(
             LaggedStartMap(DrawBorderThenFill,dots)
         )
+    def add_windmill(self):
+        points=self.get_random_points_set(40)
+        windmill=self.get_windmill(points=points)
+        self.play(Create(windmill))
+        self.play(Rotate(windmill,about_point=points[0]))
         self.wait()
